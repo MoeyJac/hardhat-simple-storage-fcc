@@ -3,13 +3,17 @@ pragma solidity 0.8.8;
 
 contract SimpleStorage {
     uint256 favoriteNumber;
-    People[] public people;
+    Person[] public people;
 
     mapping(string => uint256) public nameToFavoriteNumber;
 
-    struct People {
+    struct Person {
         uint256 favoriteNumber;
         string name;
+    }
+
+    function getPeopleLength() public view returns (uint256) {
+        return people.length;
     }
 
     function store(uint256 _favoriteNumber) public {
@@ -34,7 +38,7 @@ contract SimpleStorage {
     // by default all global variables are storage variables
     // (i.e. written to chain = storage)
     function addPerson(string memory _name, uint256 _favoriteNumber) public {
-        people.push(People({favoriteNumber: _favoriteNumber, name: _name}));
+        people.push(Person({favoriteNumber: _favoriteNumber, name: _name}));
         nameToFavoriteNumber[_name] = _favoriteNumber;
     }
 }
