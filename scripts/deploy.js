@@ -1,33 +1,48 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat");
+const { ethers, run, network } = require("hardhat")
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+    console.log("Deploying contract...")
+    const simpleStorage = await ethers.deployContract("SimpleStorage")
 
-  const lockedAmount = hre.ethers.parseEther("0.001");
+    await simpleStorage.waitForDeployment()
+    const contractAddress = await simpleStorage.getAddress()
+    console.log(`Deployed contract to: ${contractAddress}`)
 
-  const lock = await hre.ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
+    if (network.config.chainId === 11155111 && process.env.ETHERSCAN_API_KEY) {
+        console.log("Waiting for txes...")
+        await simpleStorage.deploymentTransaction().wait(6)
+        await verify(contractAddress, [])
+    }
 
-  await lock.waitForDeployment();
+    const currentValue = await simpleStorage.retrieve()
+    console.log(`Current Value is: ${currentValue}`)
 
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+    // Update the current value
+    const transactionResponse = await simpleStorage.store(7)
+    await transactionResponse.wait(1)
+    const updatedValue = await simpleStorage.retrieve()
+    console.log(`Updated Value is: ${updatedValue}`)
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+async function verify(contractAdress, args) {
+    console.log("Verifying contract...")
+    try {
+        await run("verify:verify", {
+            address: contractAdress,
+            constructorArguments: args,
+        })
+    } catch (e) {
+        if (e.message.toLowerCase().includes("already verified")) {
+            console.log("Already Verified!")
+        } else {
+            console.log(e)
+        }
+    }
+}
+
+main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error)
+        process.exit(1)
+    })
