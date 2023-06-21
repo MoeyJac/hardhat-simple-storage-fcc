@@ -3,6 +3,7 @@ require("dotenv").config()
 require("./tasks/block-number")
 require("./tasks/accounts")
 require("hardhat-gas-reporter")
+require("solidity-coverage")
 
 /** @type import('hardhat/config').HardhatUserConfig */
 
@@ -34,6 +35,6 @@ module.exports = {
         noColors: true,
         currency: "USD",
         coinmarketcap: COINMARKETCAP_API_KEY,
-        token: "MATIC",
+        //token: "MATIC",
     },
 }
