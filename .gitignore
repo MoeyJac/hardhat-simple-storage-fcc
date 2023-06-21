@@ -15,3 +15,5 @@ artifacts
 .DS_Store
 
 .vscode/
+
+gas-report.txt
